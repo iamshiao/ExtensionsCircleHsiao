@@ -110,9 +110,9 @@ namespace CircleHsiao.idv.Extensions
 
         /// <summary>Extension method for lst&lt;obj&gt; to DataTable</summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="lst"></param>
+        /// <param name="enumerable"></param>
         /// <returns></returns>
-        public static DataTable ToDataTable<T>(this IList<T> lst)
+        public static DataTable ToDataTable<T>(this IEnumerable<T> enumerable)
         {
             PropertyDescriptorCollection props =
                 TypeDescriptor.GetProperties(typeof(T));
@@ -128,7 +128,7 @@ namespace CircleHsiao.idv.Extensions
                 table.Columns.Add(prop.Name, propType);
             }
             object[] values = new object[props.Count];
-            foreach (T item in lst) {
+            foreach (T item in enumerable) {
                 for (int i = 0; i < values.Length; i++) {
                     values[i] = props[i].GetValue(item);
                 }
@@ -181,35 +181,56 @@ namespace CircleHsiao.idv.Extensions
             return src;
         }
 
-        public static string HidePartialDir(this string path)
-        {
-            List<int> indexes = new List<int>();
-            List<string> peices = path.Split('/', '\\').ToList();
-            if (peices.Count() >= 5) {
-                for (int i = 0; i < peices.Count(); i++) {
-                    if (i.NotIn(0, 1, peices.Count() - 1, peices.Count() - 2)) {
-                        indexes.Add(i);
-                    }
-                }
-
-                for (int i = 0; i < indexes.Count(); i++) {
-                    peices[indexes[i]] = "...";
-                }
-            }
-
-            return string.Join("\\", peices);
-        }
-
-        public static IEnumerable<T> RemoveWhere<T>(this IEnumerable<T> query, Predicate<T> predicate)
-        {
-            return query.Where(e => !predicate(e));
-        }
-
+        /// <summary>
+        /// Check if one IEnumerable contains another
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="superSet"></param>
+        /// <param name="subSet"></param>
+        /// <returns></returns>
         public static bool ContainAnotherWholeIEumable<T>(this IEnumerable<T> superSet, IEnumerable<T> subSet)
         {
             return !subSet.Except(superSet).Any();
         }
 
+        /// <summary>
+        /// Compare two list ignore seq
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="list1"></param>
+        /// <param name="list2"></param>
+        /// <returns></returns>
+        public static bool ElementsEquals<T>(this IEnumerable<T> list1, IEnumerable<T> list2)
+        {
+            var cnt = new Dictionary<T, int>();
+            foreach (T s in list1) {
+                if (cnt.ContainsKey(s)) {
+                    cnt[s]++;
+                }
+                else {
+                    cnt.Add(s, 1);
+                }
+            }
+            foreach (T s in list2) {
+                if (cnt.ContainsKey(s)) {
+                    cnt[s]--;
+                }
+                else {
+                    return false;
+                }
+            }
+            return cnt.Values.All(c => c == 0);
+        }
+
+        public static IList<T> Clone<T>(this IList<T> listToClone) where T : ICloneable
+        {
+            return listToClone.Select(item => (T)item.Clone()).ToList();
+        }
+
+        public static IEnumerable<T> DistinctBy<T, TKey>(this IEnumerable<T> items, Func<T, TKey> property)
+        {
+            return items.GroupBy(property).Select(x => x.First());
+        }
         #endregion
     }
 }
