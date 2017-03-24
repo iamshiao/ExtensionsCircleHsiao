@@ -74,6 +74,25 @@ namespace CircleHsiao.idv.Extensions
             return rand.Next(from, to);
         }
 
+        public static double GetRandomNum(double from, double to)
+        {
+            var rand = new Random(Guid.NewGuid().GetHashCode());
+
+            return rand.NextDouble() * (from - to) + to;
+        }
+
+        public static DateTime GetRandomDateInRange(DateTime start, DateTime end)
+        {
+            var rand = new Random(Guid.NewGuid().GetHashCode());
+            int range = (end - start).Days;
+            return start.AddDays(rand.Next(range));
+        }
+
+        public static T GetRandomOneFromParameters<T>(params T[] args)
+        {
+            return args[GetRandomNum(0, args.Count())];
+        }
+
         /// <summary>Check if path is dir(not file)</summary>
         /// <param name="path"></param>
         /// <returns></returns>
